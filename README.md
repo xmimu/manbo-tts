@@ -9,7 +9,7 @@
 
 > 无需配置开发环境，直接下载预构建安装包即可使用。
 
-前往 **[GitHub Releases](https://github.com/milorapart/manbo-tts/releases/latest)** 页面下载 Windows 安装包：
+前往 **[GitHub Releases](https://github.com/xmimu/manbo-tts/releases/latest)** 页面下载 Windows 安装包：
 
 - `.msi`（推荐）
 - `.exe`（NSIS 安装程序）
