@@ -336,6 +336,7 @@ function formatTime(date: Date): string {
                 ref="audioEl"
                 :src="audioSrc"
                 controls
+                controlsList="nodownload"
                 class="native-audio"
                 @play="isPlaying = true"
                 @pause="isPlaying = false"

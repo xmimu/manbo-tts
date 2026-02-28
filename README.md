@@ -4,6 +4,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+## 截图预览
+
+![应用截图](manbo-tts-screen.png)
+
 ## 功能特性
 
 - 文本转语音（TTS）生成
