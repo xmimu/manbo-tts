@@ -3,6 +3,18 @@
 基于 [Tauri](https://tauri.app) + [Vue 3](https://vuejs.org) + [TypeScript](https://www.typescriptlang.org) 构建的桌面端语音生成应用。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/milorapart/manbo-tts?include_prereleases)](https://github.com/milorapart/manbo-tts/releases/latest)
+
+## 下载安装
+
+> 无需配置开发环境，直接下载预构建安装包即可使用。
+
+前往 **[GitHub Releases](https://github.com/milorapart/manbo-tts/releases/latest)** 页面下载 Windows 安装包：
+
+- `.msi`（推荐）
+- `.exe`（NSIS 安装程序）
+
+下载后双击安装包按提示完成安装即可。
 
 ## 截图预览
 
@@ -11,7 +23,7 @@
 ## 功能特性
 
 - 文本转语音（TTS）生成
-- 跨平台桌面应用（Windows / macOS / Linux）
+- Windows 桌面应用
 - 轻量、快速，基于 Rust 后端
 
 ## API 说明
