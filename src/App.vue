@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Microphone, Download, Delete, VideoPlay, VideoPause, Clock } from "@element-plus/icons-vue";
@@ -43,8 +43,34 @@ const isPlaying = ref<boolean>(false);
 /** 当前正在播放的历史条目 id */
 const currentPlayingId = ref<string | null>(null);
 
-/** 历史记录 */
-const history = ref<HistoryItem[]>([]);
+/** 历史记录（从 localStorage 恢复） */
+const history = ref<HistoryItem[]>(
+  (() => {
+    try {
+      const raw = localStorage.getItem("tts_history");
+      if (!raw) return [];
+      return (JSON.parse(raw) as any[]).map((item) => ({
+        ...item,
+        createdAt: new Date(item.createdAt),
+      })) as HistoryItem[];
+    } catch {
+      return [];
+    }
+  })()
+);
+
+/** 监听历史记录变化，自动持久化到 localStorage（最多保留 30 条） */
+watch(
+  history,
+  (val) => {
+    try {
+      localStorage.setItem("tts_history", JSON.stringify(val.slice(0, 30)));
+    } catch {
+      // localStorage 空间不足时静默忽略
+    }
+  },
+  { deep: true }
+);
 
 /** 音频格式 */
 const audioFormat = ref<"mp3" | "wav">(localStorage.getItem("tts_audio_format") === "wav" ? "wav" : "mp3");
