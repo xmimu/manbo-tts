@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { Microphone, Download, Delete, VideoPlay, VideoPause, Clock } from "@element-plus/icons-vue";
 
 // ─────────────────────────────────────────────
@@ -75,17 +74,11 @@ watch(
 /** 音频格式 */
 const audioFormat = ref<"mp3" | "wav">(localStorage.getItem("tts_audio_format") === "wav" ? "wav" : "mp3");
 
-/** API Key（持久化到 localStorage） */
-const apiKey = ref<string>(localStorage.getItem("tts_api_key") ?? "");
-
-/** API Key 输入框是否显示明文 */
-const apiKeyVisible = ref<boolean>(false);
-
 // ─────────────────────────────────────────────
 // 计算属性
 // ─────────────────────────────────────────────
 const canGenerate = computed(
-  () => inputText.value.trim().length > 0 && apiKey.value.trim().length > 0 && !isGenerating.value
+  () => inputText.value.trim().length > 0 && !isGenerating.value
 );
 const textLength = computed(() => inputText.value.length);
 
@@ -109,13 +102,10 @@ async function generateSpeech(): Promise<void> {
   try {
     const dataUrl = await invoke<string>("synthesize_speech", {
       text: inputText.value,
-      apiKey: apiKey.value,
       format: audioFormat.value,
     });
     audioSrc.value = dataUrl;
     addToHistory(dataUrl);
-    // 保存 API Key
-    localStorage.setItem("tts_api_key", apiKey.value);
     // 保存输出格式
     localStorage.setItem("tts_audio_format", audioFormat.value);
     statusMessage.value = "合成完成";
@@ -199,11 +189,6 @@ function clearHistory(): void {
   currentPlayingId.value = null;
 }
 
-/** 在系统默认浏览器打开链接 */
-function handleOpenUrl(url: string): void {
-  openUrl(url);
-}
-
 /** 格式化时间 */
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -242,40 +227,9 @@ function formatTime(date: Date): string {
           />
         </div>
 
-        <!-- API Key + 格式选择 -->
+        <!-- 格式选择 -->
         <div class="panel-section">
-          <div class="section-label">API Key</div>
-          <el-input
-            v-model="apiKey"
-            :type="apiKeyVisible ? 'text' : 'password'"
-            placeholder="请输入 Bearer Token…"
-            class="key-input"
-            :disabled="isGenerating"
-          >
-            <template #suffix>
-              <el-icon
-                class="key-eye"
-                @click="apiKeyVisible = !apiKeyVisible"
-              >
-                <svg v-if="apiKeyVisible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-              </el-icon>
-            </template>
-          </el-input>
-          <p class="key-hint">
-            API Key 由
-            <a class="key-link" @click.prevent="handleOpenUrl('https://api.milorapart.top/')">MiloraAPI</a>
-            提供，请前往官网注册账号后获取。
-          </p>
-
-          <div class="section-label" style="margin-top:10px;">输出格式</div>
+          <div class="section-label">输出格式</div>
           <el-radio-group v-model="audioFormat" :disabled="isGenerating" class="format-group">
             <el-radio-button value="mp3">MP3</el-radio-button>
             <el-radio-button value="wav">WAV</el-radio-button>
