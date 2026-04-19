@@ -225,7 +225,7 @@ function formatTime(date: Date): string {
         <el-icon class="brand-icon"><Microphone /></el-icon>
         <span class="brand-title">曼波语音生成器</span>
         <el-tag size="small" effect="dark" type="info" class="brand-tag">TTS</el-tag>
-        <span class="brand-version">v0.1.2</span>
+        <span class="brand-version">v0.1.3</span>
       </div>
     </header>
 
