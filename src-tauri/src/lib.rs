@@ -1,14 +1,28 @@
 /// 调用曼波 TTS API，解析 JSON 响应，直接返回音频 URL。
 #[tauri::command]
-async fn synthesize_speech(text: String, format: String) -> Result<String, String> {
+async fn synthesize_speech(text: String, format: String, api_key: String, speed: i32) -> Result<String, String> {
     let client = reqwest::Client::new();
     // 只允许 mp3 / wav，其余回退到 mp3
     let fmt = if format == "wav" { "wav" } else { "mp3" };
+    let speed_str = speed.to_string();
 
-    let response = client
+    let mut query = vec![
+        ("text", text.as_str()),
+        ("format", fmt),
+        ("speed", speed_str.as_str()),
+    ];
+    if !api_key.is_empty() {
+        query.push(("key", api_key.as_str()));
+    }
+
+    let mut req = client
         .get("https://api.milorapart.top/apis/mbAIsc")
-        .query(&[("text", text.as_str()), ("format", fmt)])
-        .bearer_auth("")
+        .query(&query);
+    if !api_key.is_empty() {
+        req = req.bearer_auth(&api_key);
+    }
+
+    let response = req
         .send()
         .await
         .map_err(|e| format!("网络请求失败：{}", e))?;

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { Microphone, Download, Delete, VideoPlay, VideoPause, Clock } from "@element-plus/icons-vue";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { Microphone, Download, Delete, VideoPlay, VideoPause, Clock, ArrowDown } from "@element-plus/icons-vue";
 
 // ─────────────────────────────────────────────
 // 类型定义
@@ -74,11 +75,28 @@ watch(
 /** 音频格式 */
 const audioFormat = ref<"mp3" | "wav">(localStorage.getItem("tts_audio_format") === "wav" ? "wav" : "mp3");
 
+/** 是否启用 API Key */
+const useApiKey = ref<boolean>(localStorage.getItem("tts_use_api_key") === "true");
+
+/** 用户输入的 API Key */
+const apiKey = ref<string>(localStorage.getItem("tts_api_key") ?? "");
+
+/** 语速，范围 -50 ~ 50，默认 0 */
+const speed = ref<number>(Number(localStorage.getItem("tts_speed") ?? "0"));
+
+watch(useApiKey, (val) => localStorage.setItem("tts_use_api_key", String(val)));
+watch(apiKey, (val) => localStorage.setItem("tts_api_key", val));
+watch(speed, (val) => localStorage.setItem("tts_speed", String(val)));
+
+/** 设置面板是否展开，默认展开 */
+const settingsExpanded = ref<boolean>(localStorage.getItem("tts_settings_expanded") !== "false");
+watch(settingsExpanded, (val) => localStorage.setItem("tts_settings_expanded", String(val)));
+
 // ─────────────────────────────────────────────
 // 计算属性
 // ─────────────────────────────────────────────
 const canGenerate = computed(
-  () => inputText.value.trim().length > 0 && !isGenerating.value
+  () => inputText.value.trim().length > 0 && !isGenerating.value && (!useApiKey.value || apiKey.value.trim().length > 0)
 );
 const textLength = computed(() => inputText.value.length);
 
@@ -103,11 +121,15 @@ async function generateSpeech(): Promise<void> {
     const dataUrl = await invoke<string>("synthesize_speech", {
       text: inputText.value,
       format: audioFormat.value,
+      apiKey: useApiKey.value ? apiKey.value : "",
+      speed: speed.value,
     });
     audioSrc.value = dataUrl;
     addToHistory(dataUrl);
-    // 保存输出格式
+    // 保存输出格式及 api key 设置
     localStorage.setItem("tts_audio_format", audioFormat.value);
+    localStorage.setItem("tts_use_api_key", String(useApiKey.value));
+    if (useApiKey.value) localStorage.setItem("tts_api_key", apiKey.value);
     statusMessage.value = "合成完成";
     statusType.value = "success";
   } catch (e) {
@@ -203,6 +225,7 @@ function formatTime(date: Date): string {
         <el-icon class="brand-icon"><Microphone /></el-icon>
         <span class="brand-title">曼波语音生成器</span>
         <el-tag size="small" effect="dark" type="info" class="brand-tag">TTS</el-tag>
+        <span class="brand-version">v0.1.2</span>
       </div>
     </header>
 
@@ -227,13 +250,62 @@ function formatTime(date: Date): string {
           />
         </div>
 
-        <!-- 格式选择 -->
-        <div class="panel-section">
-          <div class="section-label">输出格式</div>
-          <el-radio-group v-model="audioFormat" :disabled="isGenerating" class="format-group">
-            <el-radio-button value="mp3">MP3</el-radio-button>
-            <el-radio-button value="wav">WAV</el-radio-button>
-          </el-radio-group>
+        <!-- 格式 / 语速 / API Key -->
+        <div class="panel-section settings-card">
+          <!-- 标题行，点击折叠 -->
+          <div class="setting-row settings-header" @click="settingsExpanded = !settingsExpanded">
+            <span class="setting-label">设置</span>
+            <el-icon class="settings-arrow" :class="{ collapsed: !settingsExpanded }"><ArrowDown /></el-icon>
+          </div>
+
+          <transition name="settings-collapse">
+            <div v-show="settingsExpanded" class="settings-body">
+              <!-- 输出格式 -->
+              <div class="setting-divider" />
+              <div class="setting-row">
+                <span class="setting-label">输出格式</span>
+                <el-radio-group v-model="audioFormat" :disabled="isGenerating" class="format-group">
+                  <el-radio-button value="mp3">MP3</el-radio-button>
+                  <el-radio-button value="wav">WAV</el-radio-button>
+                </el-radio-group>
+              </div>
+
+              <div class="setting-divider" />
+
+              <!-- 语速 -->
+              <div class="setting-row">
+                <span class="setting-label">语速</span>
+                <span class="speed-value">{{ speed > 0 ? `+${speed}` : speed }}</span>
+              </div>
+              <el-slider
+                v-model="speed"
+                :min="-50"
+                :max="50"
+                :step="1"
+                :disabled="isGenerating"
+                class="speed-slider"
+              />
+
+              <div class="setting-divider" />
+
+              <!-- API Key -->
+              <div class="setting-row">
+                <span class="setting-label">API Key</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <el-button size="small" text type="primary" @click="openUrl('https://api.milorapart.top/')">获取 API Key</el-button>
+                  <el-checkbox v-model="useApiKey" :disabled="isGenerating">启用 API Key</el-checkbox>
+                </div>
+              </div>
+              <el-input
+                v-model="apiKey"
+                type="password"
+                show-password
+                placeholder="输入 Bearer Token…"
+                :disabled="!useApiKey || isGenerating"
+                class="key-input"
+              />
+            </div>
+          </transition>
         </div>
 
         <!-- 生成按钮 + 状态 -->
@@ -415,6 +487,12 @@ function formatTime(date: Date): string {
   letter-spacing: 1px;
 }
 
+.brand-version {
+  font-size: 11px;
+  color: #4a7aa8;
+  letter-spacing: 0.5px;
+}
+
 /* ─── 主布局 ─── */
 .main-layout {
   flex: 1;
@@ -490,9 +568,23 @@ function formatTime(date: Date): string {
   letter-spacing: 0;
 }
 
-.key-input :deep(.el-input__wrapper.is-focus) {
-  border-color: #60b4ff;
-  box-shadow: 0 0 0 2px rgba(96, 180, 255, 0.2);
+.text-input :deep(.el-textarea__inner:disabled),
+.text-input :deep(.el-textarea__inner[disabled]) {
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: #7a9fc0 !important;
+  -webkit-text-fill-color: #7a9fc0 !important;
+  cursor: not-allowed;
+}
+
+.key-input :deep(.el-input__wrapper.is-disabled) {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+
+.key-input :deep(.el-input__inner:disabled) {
+  color: #4a6a88 !important;
+  -webkit-text-fill-color: #4a6a88 !important;
 }
 
 .key-eye {
@@ -524,6 +616,107 @@ function formatTime(date: Date): string {
   color: #93d0ff;
 }
 
+/* ─── 设置卡片 ─── */
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.settings-header:hover .setting-label {
+  color: #c0d8f8;
+}
+
+.settings-arrow {
+  color: #93c5fd;
+  font-size: 13px;
+  transition: transform 0.25s ease;
+}
+
+.settings-arrow.collapsed {
+  transform: rotate(-90deg);
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-collapse-enter-active,
+.settings-collapse-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  transform-origin: top;
+}
+
+.settings-collapse-enter-from,
+.settings-collapse-leave-to {
+  opacity: 0;
+  transform: scaleY(0.9);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.setting-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.setting-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 2px 0;
+}
+
+
+.speed-value {
+  font-size: 12px;
+  color: #60b4ff;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-slider :deep(.el-slider__runway) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.speed-slider :deep(.el-slider__bar) {
+  background: #2563eb;
+}
+
+.speed-slider :deep(.el-slider__button) {
+  border-color: #60b4ff;
+  background: #1a3a5c;
+}
+
+/* el-checkbox 暗色适配 */
+:deep(.el-checkbox__label) {
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+:deep(.el-checkbox__inner) {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+:deep(.el-checkbox.is-checked .el-checkbox__inner) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
 .format-group :deep(.el-radio-button__inner) {
   background: rgba(0, 0, 0, 0.25);
   border-color: rgba(255, 255, 255, 0.15);
@@ -535,6 +728,31 @@ function formatTime(date: Date): string {
   border-color: #2563eb;
   color: #fff;
   box-shadow: -1px 0 0 0 #2563eb;
+}
+
+.format-group :deep(.el-radio-button.is-disabled .el-radio-button__inner) {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #4a6a88 !important;
+}
+
+.format-group :deep(.el-radio-button.is-disabled.is-active .el-radio-button__inner) {
+  background: #1a4aaa !important;
+  border-color: #1a4aaa !important;
+  color: #8ab4d8 !important;
+}
+
+.speed-slider :deep(.el-slider.is-disabled .el-slider__runway) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.speed-slider :deep(.el-slider.is-disabled .el-slider__bar) {
+  background: #1a4aaa;
+}
+
+.speed-slider :deep(.el-slider.is-disabled .el-slider__button) {
+  border-color: #3a6a9a;
+  background: #1a3a5c;
 }
 
 /* ─── 文本输入 ─── */
