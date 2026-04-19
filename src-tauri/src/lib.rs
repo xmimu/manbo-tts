@@ -15,8 +15,13 @@ async fn synthesize_speech(text: String, format: String, api_key: String, speed:
         query.push(("key", api_key.as_str()));
     }
 
+    let url = if api_key.is_empty() {
+        "https://api.milorapart.top/apis/mbAIsc"
+    } else {
+        "https://api.milorapart.top/apis/mbAIscvip"
+    };
     let mut req = client
-        .get("https://api.milorapart.top/apis/mbAIsc")
+        .get(url)
         .query(&query);
     if !api_key.is_empty() {
         req = req.bearer_auth(&api_key);
