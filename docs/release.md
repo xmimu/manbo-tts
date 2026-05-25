@@ -27,21 +27,21 @@ git merge dev
 git push origin master
 
 # 3. 打 tag（与版本号一致，加 v 前缀）
-git tag v0.1.2
-git push origin v0.1.2
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 推送 tag 后，GitHub Actions 自动触发构建。
 
 ## CI 构建流程
 
-`.github/workflows/release.yml` 在 `windows-latest` 上执行：
+`.github/workflows/release.yml` 分三个 job 执行：
 
-1. 安装 Node.js 20 + pnpm 9
-2. `pnpm install` 安装前端依赖
-3. 安装 stable Rust 工具链
-4. `tauri-action` 构建并打包
-5. 自动创建 GitHub Release，上传 `.msi` 和 `.exe`
+1. **create-release**（ubuntu-latest）：创建 GitHub Release，输出 `release_id`
+2. **build-windows**（windows-latest）：并行构建，上传 `.msi` 和 `.exe`
+3. **build-linux**（ubuntu-latest）：并行构建，上传 `.deb` 和 `.AppImage`
+
+Linux 构建额外安装系统依赖：`libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`
 
 首次构建因 Rust 依赖缓存未建立，耗时约 20~30 分钟；后续有缓存约 10~15 分钟。
 

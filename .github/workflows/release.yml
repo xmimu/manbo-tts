@@ -6,47 +6,79 @@ on:
       - 'v*'
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  create-release:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-
-      - name: Install frontend dependencies
-        run: pnpm install
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 曼波语音生成器 ${{ github.ref_name }}
-          releaseBody: |
+          tag_name: ${{ github.ref_name }}
+          release_name: 曼波语音生成器 ${{ github.ref_name }}
+          body: |
             ## 下载
-            - `.msi`（推荐）
-            - `.exe`（NSIS 安装程序）
+            - Windows: `.msi`（推荐）或 `.exe`（NSIS 安装程序）
+            - Linux: `.deb` 或 `.AppImage`
 
             详见 [README](https://github.com/${{ github.repository }}/blob/master/README.md) 了解更新内容。
-          releaseDraft: false
+          draft: false
           prerelease: false
+
+  build-windows:
+    needs: create-release
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - run: pnpm install
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+
+  build-linux:
+    needs: create-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - run: pnpm install
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}

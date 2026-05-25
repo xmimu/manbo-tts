@@ -9,10 +9,15 @@
 
 > 无需配置开发环境，直接下载预构建安装包即可使用。
 
-前往 **[GitHub Releases](https://github.com/xmimu/manbo-tts/releases/latest)** 页面下载 Windows 安装包：
+前往 **[GitHub Releases](https://github.com/xmimu/manbo-tts/releases/latest)** 页面下载安装包：
 
+**Windows：**
 - `.msi`（推荐）
 - `.exe`（NSIS 安装程序）
+
+**Linux：**
+- `.deb`
+- `.AppImage`
 
 下载后双击安装包按提示完成安装即可。
 
@@ -27,9 +32,12 @@
 - 语速调节（-50 ~ +50）
 - 支持自定义 API Key（Bearer Token）
 - 历史记录（含播放、下载、删除）
-- Windows 桌面应用，轻量快速，基于 Rust 后端
+- Windows / Linux 桌面应用，轻量快速，基于 Rust 后端
 
 ## 更新日志
+
+### v0.1.4
+- 新增 Linux 构建支持（`.deb`、`.AppImage`）
 
 ### v0.1.2
 - 新增语速调节（-50 ~ +50）
