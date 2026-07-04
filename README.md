@@ -3,7 +3,7 @@
 基于 [Tauri](https://tauri.app) + [Vue 3](https://vuejs.org) + [TypeScript](https://www.typescriptlang.org) 构建的桌面端语音生成应用。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![GitHub Release](https://img.shields.io/github/v/release/milorapart/manbo-tts?include_prereleases)](https://github.com/milorapart/manbo-tts/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/xmimu/manbo-tts?include_prereleases)](https://github.com/xmimu/manbo-tts/releases/latest)
 
 ## 下载安装
 
