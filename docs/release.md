@@ -35,13 +35,16 @@ git push origin v0.1.4
 
 ## CI 构建流程
 
-`.github/workflows/release.yml` 分三个 job 执行：
+`.github/workflows/release.yml` 分四个 job 执行：
 
 1. **create-release**（ubuntu-latest）：创建 GitHub Release，输出 `release_id`
 2. **build-windows**（windows-latest）：并行构建，上传 `.msi` 和 `.exe`
 3. **build-linux**（ubuntu-latest）：并行构建，上传 `.deb` 和 `.AppImage`
+4. **build-macos**（macos-latest）：并行构建 Universal Binary（同时支持 Intel 与 Apple Silicon），上传 `.dmg`
 
 Linux 构建额外安装系统依赖：`libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`
+
+macOS 构建通过 `rustup target add aarch64-apple-darwin x86_64-apple-darwin` 并使用 `tauri build --target universal-apple-darwin` 生成通用二进制。当前**未做代码签名和公证**，用户首次打开需在「系统设置 - 隐私与安全性」中允许，或执行 `xattr -cr /Applications/曼波语音生成器.app` 绕过 Gatekeeper 提示。若后续申请了 Apple Developer 账号，可在 `tauri-action` 步骤中新增 `APPLE_CERTIFICATE`、`APPLE_CERTIFICATE_PASSWORD`、`APPLE_SIGNING_IDENTITY`、`APPLE_ID`、`APPLE_PASSWORD`、`APPLE_TEAM_ID` 等 secrets 实现签名与公证。
 
 首次构建因 Rust 依赖缓存未建立，耗时约 20~30 分钟；后续有缓存约 10~15 分钟。
 

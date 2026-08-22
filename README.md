@@ -15,11 +15,16 @@
 - `.msi`（推荐）
 - `.exe`（NSIS 安装程序）
 
+**macOS：**
+- `.dmg`（Universal，兼容 Intel 与 Apple Silicon）
+
 **Linux：**
 - `.deb`
 - `.AppImage`
 
 下载后双击安装包按提示完成安装即可。
+
+> macOS 应用未经 Apple 公证，首次打开若提示「无法打开，因为无法验证开发者」，请在「系统设置 - 隐私与安全性」中点击「仍要打开」，或执行 `xattr -cr /Applications/曼波语音生成器.app`。
 
 ## 截图预览
 
@@ -32,9 +37,12 @@
 - 语速调节（-50 ~ +50）
 - 支持自定义 API Key（Bearer Token）
 - 历史记录（含播放、下载、删除）
-- Windows / Linux 桌面应用，轻量快速，基于 Rust 后端
+- Windows / macOS / Linux 桌面应用，轻量快速，基于 Rust 后端
 
 ## 更新日志
+
+### v0.1.5
+- 新增 macOS 构建支持（Universal `.dmg`，兼容 Intel 与 Apple Silicon）
 
 ### v0.1.4
 - 新增 Linux 构建支持（`.deb`、`.AppImage`）

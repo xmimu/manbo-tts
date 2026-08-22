@@ -25,7 +25,10 @@ jobs:
           body: |
             ## 下载
             - Windows: `.msi`（推荐）或 `.exe`（NSIS 安装程序）
+            - macOS: `.dmg`（Universal，支持 Intel 与 Apple Silicon）
             - Linux: `.deb` 或 `.AppImage`
+
+            > macOS 应用未经 Apple 公证签名，首次打开需在「系统设置 - 隐私与安全性」中允许，或执行 `xattr -cr /Applications/曼波语音生成器.app`。
 
             详见 [README](https://github.com/${{ github.repository }}/blob/master/README.md) 了解更新内容。
           draft: false
@@ -82,3 +85,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
+
+  build-macos:
+    needs: create-release
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - run: pnpm install
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: --target universal-apple-darwin
