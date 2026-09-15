@@ -60,7 +60,8 @@ jobs:
 
   build-linux:
     needs: create-release
-    runs-on: ubuntu-latest
+    # 固定为 22.04，避免 ubuntu-latest(24.04/glibc 2.39) 产物在旧发行版上报 GLIBC_2.39 not found
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
