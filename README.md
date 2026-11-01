@@ -1,5 +1,8 @@
 # 曼波语音生成器 (Manbo TTS)
 
+> **维护状态：本项目已停止维护，不再继续开发或发布新版本。现有代码和 Releases 保留供参考。**
+
+
 基于 [Tauri](https://tauri.app) + [Vue 3](https://vuejs.org) + [TypeScript](https://www.typescriptlang.org) 构建的桌面端语音生成应用。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
